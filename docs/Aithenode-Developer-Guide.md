@@ -1,4 +1,4 @@
-# EduConnect Platform Developer Guide
+# Aithenode Platform Developer Guide
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -11,7 +11,7 @@
 
 ## Introduction
 
-EduConnect is a web-based platform that connects students with educators for personalized learning experiences. This developer guide explains the codebase structure and provides detailed instructions for extending the platform with new features.
+Aithenode is a web-based platform that connects students with educators for personalized learning experiences. This developer guide explains the codebase structure and provides detailed instructions for extending the platform with new features.
 
 ## Core Architecture
 
