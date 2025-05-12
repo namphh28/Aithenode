@@ -28,7 +28,7 @@ const AppFeatures = () => {
     <section className="py-12 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900">Why Choose EduConnect</h2>
+          <h2 className="text-3xl font-bold text-gray-900">Why Choose Aithenode</h2>
           <p className="mt-4 text-lg text-gray-600">
             Our platform offers everything you need for a seamless learning experience.
           </p>

@@ -13,7 +13,7 @@ import CallToAction from "@/components/CallToAction";
 const Home = () => {
   useEffect(() => {
     // Set page title
-    document.title = "EduConnect - Connect with Expert Educators";
+    document.title = "Aithenode - Connect with Expert Educators";
   }, []);
 
   return (
