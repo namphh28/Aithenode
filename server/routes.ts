@@ -147,37 +147,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { limit, subjectId, categoryId } = req.query;
       
       let educators;
-      if (subjectId) {
-        educators = await storage.getEducatorsBySubject(Number(subjectId));
-      } else if (categoryId) {
-        educators = await storage.getEducatorsByCategory(Number(categoryId));
-      } else {
-        educators = await storage.getAllEducators(limit ? Number(limit) : undefined);
+      try {
+        if (subjectId) {
+          console.log(`Fetching educators by subject ID: ${subjectId}`);
+          educators = await storage.getEducatorsBySubject(Number(subjectId));
+        } else if (categoryId) {
+          console.log(`Fetching educators by category ID: ${categoryId}`);
+          educators = await storage.getEducatorsByCategory(Number(categoryId));
+        } else {
+          console.log('Fetching all educators');
+          educators = await storage.getAllEducators(limit ? Number(limit) : undefined);
+        }
+        console.log(`Found ${educators.length} educators`);
+      } catch (fetchError) {
+        console.error('Error fetching educators:', fetchError);
+        throw fetchError;
       }
       
       // Enhance educators with their subjects and reviews
-      const enhancedEducators = await Promise.all(
-        educators.map(async (educator) => {
-          const subjects = await storage.getEducatorSubjects(educator.id);
-          const reviews = await storage.getReviewsByEducator(educator.id);
-          
-          // Calculate average rating
-          let averageRating = 0;
-          if (reviews.length > 0) {
-            averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
-          }
-          
-          return {
-            ...educator,
-            subjects,
-            reviewCount: reviews.length,
-            averageRating
-          };
-        })
-      );
-      
-      res.json(enhancedEducators);
+      try {
+        const enhancedEducators = await Promise.all(
+          educators.map(async (educator) => {
+            console.log(`Enhancing educator ${educator.id}`);
+            let subjects, reviews;
+            
+            try {
+              subjects = await storage.getEducatorSubjects(educator.id);
+            } catch (subjectsError) {
+              console.error(`Error fetching subjects for educator ${educator.id}:`, subjectsError);
+              subjects = [];
+            }
+            
+            try {
+              reviews = await storage.getReviewsByEducator(educator.id);
+            } catch (reviewsError) {
+              console.error(`Error fetching reviews for educator ${educator.id}:`, reviewsError);
+              reviews = [];
+            }
+            
+            // Calculate average rating
+            let averageRating = 0;
+            if (reviews.length > 0) {
+              averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
+            }
+            
+            return {
+              ...educator,
+              subjects,
+              reviewCount: reviews.length,
+              averageRating
+            };
+          })
+        );
+        
+        res.json(enhancedEducators);
+      } catch (enhanceError) {
+        console.error('Error enhancing educators:', enhanceError);
+        throw enhanceError;
+      }
     } catch (error) {
+      console.error('Educator profiles API error:', error);
       res.status(500).json({ message: "An error occurred fetching educators" });
     }
   });

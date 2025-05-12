@@ -239,9 +239,9 @@ const SignUp = () => {
               <div className="text-center text-sm text-gray-500">
                 Already have an account?{" "}
                 <Link href="/signin">
-                  <a className="text-primary hover:underline">
+                  <span className="text-primary hover:underline cursor-pointer">
                     Sign in
-                  </a>
+                  </span>
                 </Link>
               </div>
             </CardFooter>
