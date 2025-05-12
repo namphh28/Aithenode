@@ -56,7 +56,7 @@ Aithenode is a full-stack TypeScript application with:
 │
 └── docs/                    # Documentation
     ├── Getting-Started.md   # This file
-    └── EduConnect-Developer-Guide.md  # Comprehensive guide
+    └── Aithenode-Developer-Guide.md  # Comprehensive guide
 ```
 
 ## Authentication

@@ -158,7 +158,7 @@ export class MemStorage implements IStorage {
     
     // Create testimonials
     const testimonials = [
-      { userId: 4, content: "EduConnect helped me find the perfect math tutor who finally made calculus click for me. I went from struggling to acing my exams in just two months!", userRole: "Computer Science Student", isVisible: true },
+      { userId: 4, content: "Aithenode helped me find the perfect math tutor who finally made calculus click for me. I went from struggling to acing my exams in just two months!", userRole: "Computer Science Student", isVisible: true },
       { userId: 5, content: "I wanted to learn Spanish for an upcoming trip to Madrid. My instructor was amazing and tailored lessons to my travel needs. Highly recommend!", userRole: "Business Professional", isVisible: true },
       { userId: 6, content: "As a parent, I was looking for a qualified piano teacher for my daughter. We found an excellent instructor who makes lessons fun and engaging. Her progress has been remarkable!", userRole: "Parent", isVisible: true }
     ];

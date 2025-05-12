@@ -48,7 +48,7 @@ const SignUp = () => {
   
   // Set page title
   useEffect(() => {
-    document.title = "Sign Up | EduConnect";
+    document.title = "Sign Up | Aithenode";
   }, []);
   
   const form = useForm<SignUpFormValues>({
@@ -104,7 +104,7 @@ const SignUp = () => {
             <CardHeader className="space-y-1">
               <CardTitle className="text-2xl font-bold text-center">Create an account</CardTitle>
               <CardDescription className="text-center">
-                Join EduConnect to {userType === "educator" ? "teach students" : "find expert educators"}
+                Join Aithenode to {userType === "educator" ? "teach students" : "find expert educators"}
               </CardDescription>
             </CardHeader>
             <CardContent>

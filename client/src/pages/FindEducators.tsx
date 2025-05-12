@@ -76,7 +76,7 @@ const FindEducators = () => {
   
   // Set title
   useEffect(() => {
-    document.title = "Find Educators | EduConnect";
+    document.title = "Find Educators | Aithenode";
   }, []);
   
   return (

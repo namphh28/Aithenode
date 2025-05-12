@@ -49,7 +49,7 @@ export const fallbackCategories: Category[] = [
 export const fallbackTestimonials: Partial<Testimonial>[] = [
   {
     id: 1,
-    content: "EduConnect helped me find the perfect math tutor who finally made calculus click for me. I went from struggling to acing my exams in just two months!",
+    content: "Aithenode helped me find the perfect math tutor who finally made calculus click for me. I went from struggling to acing my exams in just two months!",
     userRole: "Computer Science Student",
     user: {
       id: 4,
