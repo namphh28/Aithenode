@@ -45,7 +45,7 @@ const SignIn = () => {
   
   // Set page title
   useEffect(() => {
-    document.title = "Sign In | EduConnect";
+    document.title = "Sign In | Aithenode";
   }, []);
   
   const form = useForm<SignInFormValues>({
@@ -88,7 +88,7 @@ const SignIn = () => {
         <div className="w-full max-w-md px-4">
           <Card>
             <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl font-bold text-center">Sign in to EduConnect</CardTitle>
+              <CardTitle className="text-2xl font-bold text-center">Sign in to Aithenode</CardTitle>
               <CardDescription className="text-center">
                 Enter your credentials to access your account
               </CardDescription>

@@ -96,7 +96,7 @@ const Dashboard = () => {
   
   // Set page title
   useEffect(() => {
-    document.title = "Dashboard | EduConnect";
+    document.title = "Dashboard | Aithenode";
   }, []);
   
   // If loading or no user, show loading state
@@ -615,7 +615,7 @@ const EducatorProfileTab = ({ currentUser }: { currentUser: User }) => {
           <CardDescription>
             {profile 
               ? "Update your educator profile to attract more students"
-              : "Set up your educator profile to start teaching on EduConnect"}
+              : "Set up your educator profile to start teaching on Aithenode"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -757,7 +757,7 @@ const EducatorProfileTab = ({ currentUser }: { currentUser: User }) => {
         <CardHeader>
           <CardTitle>Educator Profile</CardTitle>
           <CardDescription>
-            Set up your educator profile to start teaching on EduConnect
+            Set up your educator profile to start teaching on Aithenode
           </CardDescription>
         </CardHeader>
         <CardContent className="text-center py-12">
