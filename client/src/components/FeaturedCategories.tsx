@@ -27,7 +27,7 @@ const FeaturedCategories = () => {
 
           {/* All Categories card */}
           <Link href="/categories">
-            <a className="group relative block h-40 rounded-lg overflow-hidden shadow-md bg-primary">
+            <div className="group relative block h-40 rounded-lg overflow-hidden shadow-md bg-primary cursor-pointer">
               <div className="absolute inset-0 bg-primary/80 bg-opacity-0 group-hover:bg-opacity-20 transition-all"></div>
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
@@ -36,7 +36,7 @@ const FeaturedCategories = () => {
                   <i className="fas fa-arrow-right text-white mt-2"></i>
                 </div>
               </div>
-            </a>
+            </div>
           </Link>
         </div>
       </div>
