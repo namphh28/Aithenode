@@ -29,12 +29,12 @@ const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <Link href="/find-educators">
-                  <a className="text-gray-400 hover:text-white">Find an Educator</a>
+                  <span className="text-gray-400 hover:text-white cursor-pointer">Find an Educator</span>
                 </Link>
               </li>
               <li>
                 <Link href="/#how-it-works">
-                  <a className="text-gray-400 hover:text-white">How It Works</a>
+                  <span className="text-gray-400 hover:text-white cursor-pointer">How It Works</span>
                 </Link>
               </li>
               <li>
@@ -51,7 +51,7 @@ const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <Link href="/signup">
-                  <a className="text-gray-400 hover:text-white">Apply as an Educator</a>
+                  <span className="text-gray-400 hover:text-white cursor-pointer">Apply as an Educator</span>
                 </Link>
               </li>
               <li>
