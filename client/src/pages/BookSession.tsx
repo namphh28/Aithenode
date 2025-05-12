@@ -36,9 +36,9 @@ const BookSession = () => {
   // Set title
   useEffect(() => {
     if (educator) {
-      document.title = `Book a Session with ${educator.user.firstName} ${educator.user.lastName} | EduConnect`;
+      document.title = `Book a Session with ${educator.user.firstName} ${educator.user.lastName} | Aithenode`;
     } else {
-      document.title = "Book a Session | EduConnect";
+      document.title = "Book a Session | Aithenode";
     }
   }, [educator]);
   

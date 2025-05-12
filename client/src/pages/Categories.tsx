@@ -33,9 +33,9 @@ const Categories = () => {
   // Set title
   useEffect(() => {
     if (categoryWithSubjects) {
-      document.title = `${categoryWithSubjects.name} | EduConnect`;
+      document.title = `${categoryWithSubjects.name} | Aithenode`;
     } else {
-      document.title = "Subject Categories | EduConnect";
+      document.title = "Subject Categories | Aithenode";
     }
   }, [categoryWithSubjects]);
   

@@ -43,9 +43,9 @@ const EducatorProfile = () => {
   // Set page title
   useEffect(() => {
     if (educator) {
-      document.title = `${educator.user.firstName} ${educator.user.lastName} | EduConnect`;
+      document.title = `${educator.user.firstName} ${educator.user.lastName} | Aithenode`;
     } else {
-      document.title = "Educator Profile | EduConnect";
+      document.title = "Educator Profile | Aithenode";
     }
   }, [educator]);
   
