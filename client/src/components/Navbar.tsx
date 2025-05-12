@@ -42,7 +42,7 @@ const Navbar = () => {
           <div className="flex items-center">
             <Link href="/">
               <span className="flex-shrink-0 flex items-center text-primary text-2xl font-bold">
-                EduConnect
+                Aithenode
               </span>
             </Link>
             <nav className="hidden md:ml-8 md:flex md:space-x-8">
