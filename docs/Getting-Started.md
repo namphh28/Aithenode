@@ -1,13 +1,13 @@
-# EduConnect: Getting Started Guide
+# Aithenode: Getting Started Guide
 
-This guide will help you set up the EduConnect project locally and understand how to navigate the codebase.
+This guide will help you set up the Aithenode project locally and understand how to navigate the codebase.
 
 ## Quick Setup
 
 1. **Clone the Repository**
    ```bash
    git clone <repository-url>
-   cd educonnect
+   cd aithenode
    ```
 
 2. **Install Dependencies**
@@ -26,7 +26,7 @@ This guide will help you set up the EduConnect project locally and understand ho
 
 ## Project Structure
 
-EduConnect is a full-stack TypeScript application with:
+Aithenode is a full-stack TypeScript application with:
 
 - **Frontend**: React, Wouter (routing), React Query, Tailwind CSS, shadcn/ui
 - **Backend**: Express.js REST API
@@ -87,7 +87,7 @@ Default test accounts:
    - Shared type definitions in `/shared` directory
 
 2. **Adding New Features**:
-   See the comprehensive [Developer Guide](./EduConnect-Developer-Guide.md) for detailed instructions on adding new features.
+   See the comprehensive [Developer Guide](./Aithenode-Developer-Guide.md) for detailed instructions on adding new features.
 
 3. **Testing**:
    - Manual testing by running the application
@@ -102,6 +102,6 @@ Default test accounts:
 ## Getting Help
 
 If you need more detailed information:
-- Consult the [Developer Guide](./EduConnect-Developer-Guide.md)
+- Consult the [Developer Guide](./Aithenode-Developer-Guide.md)
 - Check the codebase for examples of similar features
 - Look at the type definitions for understanding data structures
