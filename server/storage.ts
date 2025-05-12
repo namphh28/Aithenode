@@ -342,20 +342,49 @@ export class MemStorage implements IStorage {
   }
   
   async getEducatorSubjects(educatorId: number): Promise<(Subject & { category: Category })[]> {
+    // Find educator-subject relationships for this educator
     const educatorSubjectsWithMatchingEducator = Array.from(this.educatorSubjects.values())
       .filter(es => es.educatorId === educatorId);
     
-    return Promise.all(
-      educatorSubjectsWithMatchingEducator.map(async es => {
-        const subject = await this.getSubject(es.subjectId);
-        if (!subject) throw new Error(`Subject not found: ${es.subjectId}`);
-        
-        const category = await this.getCategory(subject.categoryId);
-        if (!category) throw new Error(`Category not found: ${subject.categoryId}`);
-        
-        return { ...subject, category };
-      })
-    );
+    // If no subjects assigned to this educator, return empty array
+    if (educatorSubjectsWithMatchingEducator.length === 0) {
+      return [];
+    }
+    
+    try {
+      return Promise.all(
+        educatorSubjectsWithMatchingEducator.map(async es => {
+          // Skip entries with invalid subjectId
+          if (!es.subjectId) {
+            console.log(`Skipping invalid subject ID for educator ${educatorId}`);
+            return null;
+          }
+          
+          const subject = await this.getSubject(es.subjectId);
+          if (!subject) {
+            console.log(`Subject not found for ID: ${es.subjectId}, skipping`);
+            return null;
+          }
+          
+          const category = await this.getCategory(subject.categoryId);
+          if (!category) {
+            console.log(`Category not found for ID: ${subject.categoryId}, using default category`);
+            // Create a minimal default category to avoid errors
+            const defaultCategory: Category = {
+              id: 0,
+              name: "Uncategorized",
+              educatorCount: 0
+            };
+            return { ...subject, category: defaultCategory };
+          }
+          
+          return { ...subject, category };
+        })
+      ).then(results => results.filter(Boolean) as (Subject & { category: Category })[]);
+    } catch (error) {
+      console.error(`Error in getEducatorSubjects for educator ${educatorId}:`, error);
+      return []; // Return empty array on error to avoid breaking the app
+    }
   }
   
   // Session operations
@@ -414,14 +443,43 @@ export class MemStorage implements IStorage {
     const reviews = Array.from(this.reviews.values())
       .filter(review => review.educatorId === educatorId);
     
-    return Promise.all(
-      reviews.map(async review => {
-        const student = await this.getUser(review.studentId);
-        if (!student) throw new Error(`Student not found: ${review.studentId}`);
-        
-        return { ...review, student };
-      })
-    );
+    // If no reviews for this educator, return empty array
+    if (reviews.length === 0) {
+      return [];
+    }
+    
+    try {
+      return Promise.all(
+        reviews.map(async review => {
+          try {
+            const student = await this.getUser(review.studentId);
+            if (!student) {
+              console.log(`Student not found for ID: ${review.studentId}, using placeholder`);
+              // Create a minimal student object to avoid errors
+              const placeholderStudent: User = {
+                id: 0,
+                username: "former_student",
+                firstName: "Former",
+                lastName: "Student",
+                email: "student@example.com",
+                password: "",
+                userType: "student",
+                isVerified: false
+              };
+              return { ...review, student: placeholderStudent };
+            }
+            
+            return { ...review, student };
+          } catch (error) {
+            console.error(`Error processing review ${review.id}:`, error);
+            return null;
+          }
+        })
+      ).then(results => results.filter(Boolean) as (Review & { student: User })[]);
+    } catch (error) {
+      console.error(`Error in getReviewsByEducator for educator ${educatorId}:`, error);
+      return []; // Return empty array on error to avoid breaking the app
+    }
   }
   
   // Testimonial operations
