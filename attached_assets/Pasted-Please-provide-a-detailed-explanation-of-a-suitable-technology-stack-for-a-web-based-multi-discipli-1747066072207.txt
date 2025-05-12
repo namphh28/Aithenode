@@ -1,0 +1,65 @@
+Please provide a detailed explanation of a suitable technology stack for a web-based, multi-disciplinary learning platform named Educonnect, inspired by the requirements outlined in the provided documents. Additionally, include a step-by-step guide on how to add a new feature to a hypothetical codebase for this platform, and create a comprehensive documentation package. Replit should select the most convenient and efficient technology stack for its environment, ensuring compatibility, ease of use, and scalability. The platform connects learners with teachers across various subjects (e.g., academics, arts, technology, business, health) and supports features like user registration, teacher profiles, course and session booking, video calls, group classes, community forums, and secure payments. Below are the detailed requirements:
+
+### Requirements
+1. **Tech Stack Explanation**:
+   - Provide a detailed document explaining the chosen technology stack, including:
+     - **Frontend**: Framework/library, styling approach, and state management.
+     - **Backend**: Framework, API structure, and authentication mechanism.
+     - **Database**: Type (e.g., relational/non-relational), schema design, and caching strategy.
+     - **Real-Time Communication**: Tools for video calls, chat, and notifications.
+     - **Payments**: Payment gateway and subscription handling.
+     - **DevOps**: Containerization, CI/CD pipeline, and deployment process.
+     - **Other Tools**: Testing frameworks, linting tools, logging, and monitoring.
+   - For each component, explain:
+     - Why it was chosen (e.g., compatibility with Replit, scalability, ease of use).
+     - How it integrates with other components.
+     - Any limitations or considerations for future scaling.
+   - Include a diagram (e.g., architecture overview in text-based ASCII or a description) to illustrate the stack’s structure.
+   - Ensure the stack aligns with the platform’s needs for a microservices architecture, RESTful API, responsive design, and multi-language support (at least English and Vietnamese), as described in the provided documents.
+
+2. **Guide to Adding a New Feature**:
+   - Provide a step-by-step guide on how to add a new feature to a hypothetical codebase for Aithenode, including:
+     - **Example Feature**: Add a "Teacher Review System" allowing learners to rate (1-5 stars) and comment on teachers after sessions.
+     - **Steps**:
+       1. Identify the service/module to modify (e.g., user service, booking service).
+       2. Update the database schema (e.g., add a reviews collection/table).
+       3. Create or modify API endpoints (e.g., POST /reviews, GET /teacher/:id/reviews).
+       4. Update backend logic (e.g., validate review data, store in database).
+       5. Update frontend components (e.g., add review form, display reviews on teacher profile).
+       6. Write unit and integration tests for the new feature.
+       7. Update API documentation to reflect new endpoints.
+       8. Test the feature locally and in a staging environment.
+       9. Commit changes using Git with clear commit messages.
+       10. Deploy the feature using the CI/CD pipeline.
+     - Include code snippets for each step (e.g., schema definition, API route, frontend component) based on the chosen tech stack.
+     - Highlight best practices (e.g., modular code, error handling, testing).
+     - Address potential challenges (e.g., database migrations, backward compatibility).
+   - Ensure the guide is clear and applicable to a modular, microservices-based codebase.
+
+3. **Comprehensive Documentation**:
+   - Create a complete documentation package, including:
+     - **Overview Document**: Brief description of Aithenode, its purpose, and key features (referencing the provided documents).
+     - **Tech Stack Documentation**: Detailed explanation of the chosen stack (as described above).
+     - **Developer Guide**: Explanation of how to extend the codebase, including the feature addition guide.
+     - **API Documentation**: Example structure for API endpoints (e.g., for the Teacher Review System), with request/response formats and authentication requirements.
+     - **Troubleshooting Guide**: Common issues (e.g., setup failures, API errors) and their solutions for developers working with the chosen stack.
+     - **Glossary**: Definitions of key terms (e.g., microservices, RESTful API, WCAG).
+   - Ensure documentation is clear, well-organized, and accessible to both technical and non-technical audiences.
+   - Host documentation in a dedicated `/docs` folder within the Replit project or as a static site if supported.
+   - Include a **README.md** with an overview of the documentation package, setup instructions for accessing the docs, and contribution guidelines for updating them.
+
+### Deliverables
+- A Replit project containing:
+  - A detailed tech stack explanation document, including rationale, integration details, and an architecture diagram.
+  - A step-by-step guide for adding a new feature (Teacher Review System) with code snippets tailored to the chosen tech stack.
+  - A comprehensive documentation package covering overview, tech stack, developer guide, API documentation, troubleshooting, and glossary.
+- All documents should be version-controlled and organized in a `/docs` folder or equivalent structure.
+- Provide a link to the Replit project once complete, along with instructions for accessing and navigating the documentation.
+
+### Additional Notes
+- Ensure the tech stack and documentation align with the requirements in the provided documents (e.g., microservices architecture, scalability, security, multi-language support).
+- Optimize explanations and guides for the Vietnamese market initially, with considerations for Southeast Asia expansion.
+- Follow the competitive advantages outlined in the documents (e.g., lower commission rates, community features like "find a study buddy").
+- Ensure all content is clear, professional, and ready for a development team to use as a reference.
+
+Please create this documentation package on Replit using the most convenient tech stack for your environment. Ensure the tech stack explanation, feature addition guide, and comprehensive documentation are well-organized, accessible, and included in the project repository. Provide a link to the Replit project and instructions for accessing the deliverables.

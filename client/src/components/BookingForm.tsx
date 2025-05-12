@@ -245,7 +245,7 @@ const BookingForm = ({ educator, currentUser }: BookingFormProps) => {
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="" disabled>
+                      <SelectItem value="no-times" disabled>
                         No available times
                       </SelectItem>
                     )}
