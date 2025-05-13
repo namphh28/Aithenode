@@ -14,26 +14,68 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { EducatorProfile, Category } from "@/lib/types";
-import { SearchIcon } from "@/lib/icons";
+import { SearchIcon, StarIcon } from "@/lib/icons";
+import { sampleEducators, sampleCategories } from "@/lib/sampleData";
+
+// Available languages
+const LANGUAGES = [
+  "English",
+  "Spanish",
+  "French",
+  "German",
+  "Chinese",
+  "Japanese",
+  "Korean",
+  "Arabic",
+  "Russian",
+  "Portuguese"
+];
+
+// Available time slots
+const TIME_SLOTS = [
+  "Morning (6AM-12PM)",
+  "Afternoon (12PM-5PM)",
+  "Evening (5PM-10PM)",
+  "Night (10PM-6AM)"
+];
 
 const FindEducators = () => {
   const [location] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
   
+  // Search and basic filters
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "");
-  const [priceRange, setPriceRange] = useState([0, 100]);
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "all");
+  const [priceRange, setPriceRange] = useState([0, 200]);
+  
+  // New filters
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const [selectedTimeSlots, setSelectedTimeSlots] = useState<string[]>([]);
+  const [minimumRating, setMinimumRating] = useState<number>(0);
+  
   const [filteredEducators, setFilteredEducators] = useState<EducatorProfile[]>([]);
   
-  // Fetch all educators
+  // Fetch all educators (with fallback to sample data)
   const { data: educators, isLoading: educatorsLoading } = useQuery<EducatorProfile[]>({
     queryKey: ["/api/educator-profiles"],
+    queryFn: async () => {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return sampleEducators;
+    }
   });
   
-  // Fetch all categories for filter
+  // Fetch all categories (with fallback to sample data)
   const { data: categories } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
+    queryFn: async () => {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return sampleCategories;
+    }
   });
   
   // Apply filters when data or filter values change
@@ -56,11 +98,61 @@ const FindEducators = () => {
     }
     
     // Apply category filter
-    if (selectedCategory) {
+    if (selectedCategory && selectedCategory !== "all") {
       filtered = filtered.filter(
         educator => 
           educator.subjects && 
           educator.subjects.some(subject => subject.categoryId === parseInt(selectedCategory))
+      );
+    }
+    
+    // Apply subject filters
+    if (selectedSubjects.length > 0) {
+      filtered = filtered.filter(educator =>
+        educator.subjects?.some(subject =>
+          selectedSubjects.includes(subject.name)
+        )
+      );
+    }
+    
+    // Apply language filters
+    if (selectedLanguages.length > 0) {
+      filtered = filtered.filter(educator =>
+        educator.specialties?.some(specialty =>
+          selectedLanguages.some(lang => 
+            specialty.toLowerCase().includes(lang.toLowerCase())
+          )
+        )
+      );
+    }
+    
+    // Apply time slot filters
+    if (selectedTimeSlots.length > 0) {
+      filtered = filtered.filter(educator => {
+        if (!educator.availability) return false;
+        
+        return selectedTimeSlots.some(slot => {
+          const [period] = slot.split(" ");
+          return Object.values(educator.availability).some(times => 
+            times.some(time => {
+              const hour = parseInt(time.split(":")[0]);
+              switch(period) {
+                case "Morning": return hour >= 6 && hour < 12;
+                case "Afternoon": return hour >= 12 && hour < 17;
+                case "Evening": return hour >= 17 && hour < 22;
+                case "Night": return hour >= 22 || hour < 6;
+                default: return false;
+              }
+            })
+          );
+        });
+      });
+    }
+    
+    // Apply rating filter
+    if (minimumRating > 0) {
+      filtered = filtered.filter(
+        educator => (educator.averageRating || 0) >= minimumRating
       );
     }
     
@@ -72,7 +164,18 @@ const FindEducators = () => {
     );
     
     setFilteredEducators(filtered);
-  }, [educators, searchQuery, selectedCategory, priceRange]);
+  }, [educators, searchQuery, selectedCategory, priceRange, selectedSubjects, selectedLanguages, selectedTimeSlots, minimumRating]);
+  
+  // Reset all filters
+  const resetFilters = () => {
+    setSearchQuery("");
+    setSelectedCategory("all");
+    setPriceRange([0, 200]);
+    setSelectedSubjects([]);
+    setSelectedLanguages([]);
+    setSelectedTimeSlots([]);
+    setMinimumRating(0);
+  };
   
   // Set title
   useEffect(() => {
@@ -130,11 +233,12 @@ const FindEducators = () => {
               <div className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-lg font-semibold mb-4">Filters</h2>
                 
+                {/* Price Range Filter */}
                 <div className="mb-6">
-                  <h3 className="text-sm font-medium mb-2">Price Range</h3>
+                  <h3 className="text-sm font-medium mb-2">Price Range ($/hour)</h3>
                   <div className="mb-6">
                     <Slider
-                      defaultValue={[0, 100]}
+                      defaultValue={[0, 200]}
                       max={200}
                       step={5}
                       value={priceRange}
@@ -147,39 +251,105 @@ const FindEducators = () => {
                   </div>
                 </div>
                 
+                {/* Rating Filter */}
                 <div className="mb-6">
-                  <h3 className="text-sm font-medium mb-2">Categories</h3>
-                  <div className="space-y-2">
-                    <Button
-                      variant={selectedCategory === "" ? "default" : "outline"}
-                      size="sm"
-                      className="mr-2 mb-2"
-                      onClick={() => setSelectedCategory("")}
-                    >
-                      All
-                    </Button>
-                    {categories?.map(category => (
+                  <h3 className="text-sm font-medium mb-2">Minimum Rating</h3>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((rating) => (
                       <Button
-                        key={category.id}
-                        variant={selectedCategory === category.id.toString() ? "default" : "outline"}
+                        key={rating}
+                        variant={minimumRating === rating ? "default" : "outline"}
                         size="sm"
-                        className="mr-2 mb-2"
-                        onClick={() => setSelectedCategory(category.id.toString())}
+                        onClick={() => setMinimumRating(rating === minimumRating ? 0 : rating)}
+                        className="p-2"
                       >
-                        {category.name}
+                        <StarIcon className="h-4 w-4" filled={rating <= minimumRating} />
                       </Button>
                     ))}
+                  </div>
+                </div>
+                
+                {/* Language Filter */}
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium mb-2">Languages</h3>
+                  <div className="space-y-2">
+                    {LANGUAGES.map(language => (
+                      <div key={language} className="flex items-center">
+                        <Checkbox
+                          id={`lang-${language}`}
+                          checked={selectedLanguages.includes(language)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedLanguages([...selectedLanguages, language]);
+                            } else {
+                              setSelectedLanguages(selectedLanguages.filter(l => l !== language));
+                            }
+                          }}
+                        />
+                        <label htmlFor={`lang-${language}`} className="ml-2 text-sm">
+                          {language}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Time Availability Filter */}
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium mb-2">Availability</h3>
+                  <div className="space-y-2">
+                    {TIME_SLOTS.map(slot => (
+                      <div key={slot} className="flex items-center">
+                        <Checkbox
+                          id={`time-${slot}`}
+                          checked={selectedTimeSlots.includes(slot)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedTimeSlots([...selectedTimeSlots, slot]);
+                            } else {
+                              setSelectedTimeSlots(selectedTimeSlots.filter(s => s !== slot));
+                            }
+                          }}
+                        />
+                        <label htmlFor={`time-${slot}`} className="ml-2 text-sm">
+                          {slot}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Subject Filter */}
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium mb-2">Subjects</h3>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {categories?.map(category => 
+                      category.subjects?.map(subject => (
+                        <div key={subject.id} className="flex items-center">
+                          <Checkbox
+                            id={`subject-${subject.id}`}
+                            checked={selectedSubjects.includes(subject.name)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedSubjects([...selectedSubjects, subject.name]);
+                              } else {
+                                setSelectedSubjects(selectedSubjects.filter(s => s !== subject.name));
+                              }
+                            }}
+                          />
+                          <label htmlFor={`subject-${subject.id}`} className="ml-2 text-sm">
+                            {subject.name}
+                          </label>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
                 
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setSelectedCategory("");
-                    setPriceRange([0, 100]);
-                  }}
+                  onClick={resetFilters}
                 >
                   Reset Filters
                 </Button>
@@ -210,13 +380,7 @@ const FindEducators = () => {
                   <p className="text-gray-500 mb-6">
                     Try adjusting your filters or search criteria to find more results.
                   </p>
-                  <Button
-                    onClick={() => {
-                      setSearchQuery("");
-                      setSelectedCategory("");
-                      setPriceRange([0, 100]);
-                    }}
-                  >
+                  <Button onClick={resetFilters}>
                     Clear all filters
                   </Button>
                 </div>
