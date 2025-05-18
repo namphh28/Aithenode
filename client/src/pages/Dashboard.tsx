@@ -54,6 +54,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CalendarIcon, StarIcon } from "@/lib/icons";
+import EducatorProfileTips from "@/components/EducatorProfileTips";
+import { Checkbox } from "@/components/ui/checkbox";
+import SubjectSelector from "@/components/SubjectSelector";
 
 // Modified educator profile schema for the form
 const educatorProfileSchema = z.object({
@@ -61,6 +64,8 @@ const educatorProfileSchema = z.object({
   hourlyRate: z.coerce.number().min(5, { message: "Hourly rate must be at least 5" }),
   experience: z.string().optional(),
   education: z.string().optional(),
+  teachingMethod: z.string().min(10, { message: "Please describe your teaching method in at least 10 characters" }),
+  videoIntroduction: z.string().url().optional().or(z.literal('')),
   specialties: z.array(z.string()).min(1, { message: "Select at least one specialty" }),
 });
 
@@ -501,11 +506,15 @@ const EducatorProfileTab = ({ currentUser }: { currentUser: User }) => {
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<number[]>([]);
   
   // Fetch educator profile
   const { data: profile, isLoading: profileLoading } = useQuery<EducatorProfile>({
     queryKey: [`/api/educator-profiles/byUser/${currentUser.id}`],
     retry: false,
+    onSuccess: (data) => {
+      console.log("Loaded educator profile with subjects:", data?.subjects);
+    }
   });
   
   // Check if we need to create a new profile
@@ -514,6 +523,13 @@ const EducatorProfileTab = ({ currentUser }: { currentUser: User }) => {
       setIsEditMode(true);
     }
   }, [profile, profileLoading]);
+  
+  // Fetch educator's current subjects when profile is loaded
+  useEffect(() => {
+    if (profile && profile.subjects) {
+      setSelectedSubjectIds(profile.subjects.map(subject => subject.id));
+    }
+  }, [profile]);
   
   // Pre-defined specialties for the form
   const specialtyOptions = [
@@ -533,6 +549,8 @@ const EducatorProfileTab = ({ currentUser }: { currentUser: User }) => {
       hourlyRate: profile?.hourlyRate || 40,
       experience: profile?.experience || "",
       education: profile?.education || "",
+      teachingMethod: profile?.teachingMethod || "",
+      videoIntroduction: profile?.videoIntroduction || "",
       specialties: profile?.specialties || [],
     },
   });
@@ -545,6 +563,8 @@ const EducatorProfileTab = ({ currentUser }: { currentUser: User }) => {
         hourlyRate: profile.hourlyRate,
         experience: profile.experience || "",
         education: profile.education || "",
+        teachingMethod: profile.teachingMethod || "",
+        videoIntroduction: profile.videoIntroduction || "",
         specialties: profile.specialties || [],
       });
     }
@@ -553,23 +573,49 @@ const EducatorProfileTab = ({ currentUser }: { currentUser: User }) => {
   // Create/update profile mutation
   const profileMutation = useMutation({
     mutationFn: async (data: EducatorProfileFormValues) => {
+      console.log("Submitting profile data:", data);
       if (profile) {
         // Update profile
-        return apiRequest("PATCH", `/api/educator-profiles/${profile.id}`, data);
+        const result = await apiRequest("PATCH", `/api/educator-profiles/${profile.id}`, data);
+        console.log("Profile update response:", result);
+        return result;
       } else {
         // Create new profile
         return apiRequest("POST", "/api/educator-profiles", data);
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/educator-profiles"] });
-      toast({
-        title: profile ? "Profile updated" : "Profile created",
-        description: profile 
-          ? "Your educator profile has been updated successfully." 
-          : "Your educator profile has been created successfully.",
-      });
-      setIsEditMode(false);
+    onSuccess: async (data) => {
+      // After profile is created/updated, save the selected subjects
+      try {
+        if (selectedSubjectIds.length > 0) {
+          const result = await apiRequest("POST", "/api/educator-subjects", {
+            subjectIds: selectedSubjectIds
+          });
+          
+          // Invalidate all profile-related queries to ensure they refresh
+          queryClient.invalidateQueries({ queryKey: ["/api/educator-profiles"] });
+          queryClient.invalidateQueries({ queryKey: [`/api/educator-profiles/byUser/${currentUser.id}`] });
+          queryClient.invalidateQueries({ queryKey: [`/api/educator-profiles/${profile?.id}`] });
+        }
+        
+        // Invalidate both the general educator profiles list and the specific user profile
+        queryClient.invalidateQueries({ queryKey: ["/api/educator-profiles"] });
+        queryClient.invalidateQueries({ queryKey: [`/api/educator-profiles/byUser/${currentUser.id}`] });
+        
+        toast({
+          title: profile ? "Profile updated" : "Profile created",
+          description: profile 
+            ? "Your educator profile has been updated successfully." 
+            : "Your educator profile has been created successfully.",
+        });
+        setIsEditMode(false);
+      } catch (error) {
+        toast({
+          title: "Warning",
+          description: "Profile saved but there was an issue updating your teaching subjects.",
+          variant: "destructive",
+        });
+      }
     },
     onError: (error) => {
       toast({
@@ -660,14 +706,18 @@ const EducatorProfileTab = ({ currentUser }: { currentUser: User }) => {
                 name="experience"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Experience</FormLabel>
+                    <FormLabel>Experience & Skills</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Describe your teaching experience and background"
-                        className="min-h-[100px]"
+                        placeholder="Detail your work experience, teaching achievements (years of experience, institutions, student achievements), projects, and relevant soft skills (communication, teaching ability, patience)"
+                        className="min-h-[150px]"
                         {...field}
                       />
                     </FormControl>
+                    <FormDescription>
+                      Provide specific details about your teaching background, achievements, and relevant skills. 
+                      The more specific and credible this information is, the more trust it builds with potential students.
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -693,59 +743,109 @@ const EducatorProfileTab = ({ currentUser }: { currentUser: User }) => {
               
               <FormField
                 control={form.control}
-                name="specialties"
+                name="teachingMethod"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Specialties</FormLabel>
+                    <FormLabel>Teaching Method</FormLabel>
                     <FormControl>
-                      <div className="flex flex-wrap gap-2">
-                        {specialtyOptions.map((specialty) => (
-                          <Button
-                            type="button"
-                            key={specialty}
-                            variant={field.value.includes(specialty) ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => {
-                              if (field.value.includes(specialty)) {
-                                field.onChange(
-                                  field.value.filter((val) => val !== specialty)
-                                );
-                              } else {
-                                field.onChange([...field.value, specialty]);
-                              }
-                            }}
-                          >
-                            {specialty}
-                          </Button>
-                        ))}
-                      </div>
+                      <Textarea 
+                        placeholder="Describe your teaching approach, philosophy, or unique methods that help students learn effectively"
+                        className="min-h-[100px]"
+                        {...field}
+                      />
                     </FormControl>
                     <FormDescription>
-                      Select the subjects and topics you specialize in teaching
+                      Explain how you teach, your educational philosophy, or what makes your teaching style unique. 
+                      This helps students understand how your classes will be conducted.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               
-              <div className="flex justify-end space-x-4">
-                {profile && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsEditMode(false)}
-                  >
-                    Cancel
-                  </Button>
+              <FormField
+                control={form.control}
+                name="videoIntroduction"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Video Introduction (URL)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="https://www.youtube.com/watch?v=example"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Add a link to a short 1-3 minute video introduction. This significantly increases student interest.
+                      Upload your video to YouTube, Vimeo, or another hosting platform and paste the link here.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
                 )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="specialties"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Specialties</FormLabel>
+                    <FormControl>
+                      <div className="flex flex-wrap gap-2 border rounded-md p-4 max-h-48 overflow-y-auto">
+                        {specialtyOptions.map((specialty) => (
+                          <div key={specialty} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={specialty}
+                              checked={field.value.includes(specialty)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  field.onChange([...field.value, specialty]);
+                                } else {
+                                  field.onChange(field.value.filter(item => item !== specialty));
+                                }
+                              }}
+                            />
+                            <label
+                              htmlFor={specialty}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              {specialty}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </FormControl>
+                    <FormDescription>
+                      Select your areas of specialty within your teaching subjects
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Teaching Subjects</label>
+                <SubjectSelector 
+                  selectedSubjectIds={selectedSubjectIds}
+                  onChange={setSelectedSubjectIds}
+                />
+                <p className="text-sm text-gray-500">
+                  These are the subjects you'll be listed under in searches
+                </p>
+              </div>
+
+              <div className="flex justify-end space-x-4">
+                <Button variant="outline" type="button" onClick={() => setIsEditMode(false)}>
+                  Cancel
+                </Button>
                 <Button type="submit" disabled={profileMutation.isPending}>
-                  {profileMutation.isPending 
-                    ? (profile ? "Updating..." : "Creating...") 
-                    : (profile ? "Update Profile" : "Create Profile")}
+                  {profile ? "Update" : "Create"} Profile
                 </Button>
               </div>
             </form>
           </Form>
+          
+          {!profile && <EducatorProfileTips />}
         </CardContent>
       </Card>
     );
@@ -800,7 +900,7 @@ const EducatorProfileTab = ({ currentUser }: { currentUser: User }) => {
           
           {profile.experience && (
             <div>
-              <h3 className="text-lg font-semibold mb-2">Experience</h3>
+              <h3 className="text-lg font-semibold mb-2">Experience & Skills</h3>
               <p className="text-gray-700">{profile.experience}</p>
             </div>
           )}
@@ -809,6 +909,27 @@ const EducatorProfileTab = ({ currentUser }: { currentUser: User }) => {
             <div>
               <h3 className="text-lg font-semibold mb-2">Education</h3>
               <p className="text-gray-700">{profile.education}</p>
+            </div>
+          )}
+          
+          {profile.teachingMethod && (
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Teaching Method</h3>
+              <p className="text-gray-700">{profile.teachingMethod}</p>
+            </div>
+          )}
+          
+          {profile.videoIntroduction && (
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Video Introduction</h3>
+              <div className="aspect-video">
+                <iframe 
+                  src={profile.videoIntroduction.replace('watch?v=', 'embed/')}
+                  className="w-full h-full rounded-md"
+                  title="Video Introduction"
+                  allowFullScreen
+                ></iframe>
+              </div>
             </div>
           )}
           
@@ -822,6 +943,37 @@ const EducatorProfileTab = ({ currentUser }: { currentUser: User }) => {
                   </Badge>
                 ))}
               </div>
+            </div>
+          )}
+          
+          {profile.subjects && profile.subjects.length > 0 ? (
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Teaching Subjects</h3>
+              <div className="space-y-4">
+                {Array.from(new Set(profile.subjects.map(subject => subject.category?.id))).map(categoryId => {
+                  if (!categoryId) return null;
+                  const categorySubjects = profile.subjects!.filter(subject => subject.category?.id === categoryId);
+                  const categoryName = categorySubjects[0]?.category?.name || "Other";
+                  
+                  return (
+                    <div key={categoryId} className="space-y-1">
+                      <h4 className="text-sm text-gray-500">{categoryName}</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {categorySubjects.map(subject => (
+                          <Badge key={subject.id} variant="secondary" className="text-sm">
+                            {subject.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Teaching Subjects</h3>
+              <p className="text-gray-500">No teaching subjects selected. Click Edit Profile to add subjects you teach.</p>
             </div>
           )}
         </div>

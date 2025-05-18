@@ -24,6 +24,8 @@ export const educatorProfiles = pgTable("educator_profiles", {
   hourlyRate: doublePrecision("hourly_rate").notNull(),
   experience: text("experience"),
   education: text("education"),
+  teachingMethod: text("teaching_method"),
+  videoIntroduction: text("video_introduction"), // URL to a video introduction
   specialties: text("specialties").array(),
   availability: json("availability"), // JSON object with availability slots
 });

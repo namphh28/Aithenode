@@ -36,6 +36,7 @@ export interface IStorage {
   getEducatorProfile(id: number): Promise<EducatorProfile | undefined>;
   getEducatorProfileByUserId(userId: number): Promise<EducatorProfile | undefined>;
   createEducatorProfile(profile: InsertEducatorProfile): Promise<EducatorProfile>;
+  updateEducatorProfile(id: number, profile: EducatorProfile): Promise<EducatorProfile>;
   getAllEducators(limit?: number): Promise<(EducatorProfile & { user: User })[]>;
   getEducatorsBySubject(subjectId: number): Promise<(EducatorProfile & { user: User })[]>;
   getEducatorsByCategory(categoryId: number): Promise<(EducatorProfile & { user: User })[]>;
@@ -53,6 +54,7 @@ export interface IStorage {
   
   // EducatorSubject operations
   assignSubjectToEducator(educatorSubject: InsertEducatorSubject): Promise<EducatorSubject>;
+  removeSubjectFromEducator(educatorId: number, subjectId: number): Promise<boolean>;
   getEducatorSubjects(educatorId: number): Promise<(Subject & { category: Category })[]>;
   
   // Session operations
@@ -112,10 +114,12 @@ export class MemStorage implements IStorage {
     this.testimonialId = 1;
     
     // Initialize with sample data
-    this.initializeData();
+    this.initializeData().catch(error => {
+      console.error("Error initializing data:", error);
+    });
   }
   
-  private initializeData(): void {
+  private async initializeData(): Promise<void> {
     // Sample categories
     const categories = [
       { name: "Mathematics", description: "Mathematics and Statistics", imageUrl: "https://images.unsplash.com/photo-1535551951406-a19828b0a76b", educatorCount: 120 },
@@ -128,21 +132,21 @@ export class MemStorage implements IStorage {
     ];
     
     for (const category of categories) {
-      this.createCategory(category);
+      await this.createCategory(category);
     }
     
     // Sample users
     const users = [
-      { username: "sarahjohnson", password: "password123", email: "sarah@example.com", firstName: "Sarah", lastName: "Johnson", bio: "PhD in Mathematics with 10+ years of teaching experience", profileImage: "https://images.unsplash.com/photo-1544717305-2782549b5136", userType: "educator", isVerified: true },
-      { username: "jameswilson", password: "password123", email: "james@example.com", firstName: "James", lastName: "Wilson", bio: "Senior software developer with expertise in web technologies", profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d", userType: "educator", isVerified: true },
-      { username: "mariagarcia", password: "password123", email: "maria@example.com", firstName: "Maria", lastName: "Garcia", bio: "Multilingual expert with degrees in Literature and Linguistics", profileImage: "https://images.unsplash.com/photo-1580894732444-8ecded7900cd", userType: "educator", isVerified: true },
-      { username: "alexthompson", password: "password123", email: "alex@example.com", firstName: "Alex", lastName: "Thompson", bio: "Computer Science student", profileImage: "https://images.unsplash.com/photo-1557862921-37829c790f19", userType: "student", isVerified: true },
-      { username: "jenniferdavis", password: "password123", email: "jennifer@example.com", firstName: "Jennifer", lastName: "Davis", bio: "Business professional looking to learn Spanish", profileImage: "https://images.unsplash.com/photo-1580489944761-15a19d654956", userType: "student", isVerified: true },
-      { username: "sophiawilliams", password: "password123", email: "sophia@example.com", firstName: "Sophia", lastName: "Williams", bio: "Parent looking for a piano teacher for my daughter", profileImage: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91", userType: "student", isVerified: true }
+      { username: "sarahjohnson", password: "password123", email: "sarah@example.com", firstName: "Sarah", lastName: "Johnson", bio: "PhD in Mathematics with 10+ years of teaching experience", profileImage: "https://images.unsplash.com/photo-1544717305-2782549b5136", userType: "educator", isVerified: true, confirmPassword: "password123" },
+      { username: "jameswilson", password: "password123", email: "james@example.com", firstName: "James", lastName: "Wilson", bio: "Senior software developer with expertise in web technologies", profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d", userType: "educator", isVerified: true, confirmPassword: "password123" },
+      { username: "mariagarcia", password: "password123", email: "maria@example.com", firstName: "Maria", lastName: "Garcia", bio: "Multilingual expert with degrees in Literature and Linguistics", profileImage: "https://images.unsplash.com/photo-1580894732444-8ecded7900cd", userType: "educator", isVerified: true, confirmPassword: "password123" },
+      { username: "alexthompson", password: "password123", email: "alex@example.com", firstName: "Alex", lastName: "Thompson", bio: "Computer Science student", profileImage: "https://images.unsplash.com/photo-1557862921-37829c790f19", userType: "student", isVerified: true, confirmPassword: "password123" },
+      { username: "jenniferdavis", password: "password123", email: "jennifer@example.com", firstName: "Jennifer", lastName: "Davis", bio: "Business professional looking to learn Spanish", profileImage: "https://images.unsplash.com/photo-1580489944761-15a19d654956", userType: "student", isVerified: true, confirmPassword: "password123" },
+      { username: "sophiawilliams", password: "password123", email: "sophia@example.com", firstName: "Sophia", lastName: "Williams", bio: "Parent looking for a piano teacher for my daughter", profileImage: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91", userType: "student", isVerified: true, confirmPassword: "password123" }
     ];
     
     for (const user of users) {
-      this.createUser(user);
+      await this.createUser(user);
     }
     
     // Create educator profiles
@@ -153,7 +157,36 @@ export class MemStorage implements IStorage {
     ];
     
     for (const profile of educatorProfiles) {
-      this.createEducatorProfile(profile);
+      await this.createEducatorProfile(profile);
+    }
+    
+    // Create subjects and link to educators
+    const mathSubjects = ["Calculus", "Statistics", "Algebra", "Geometry", "Trigonometry"];
+    const programmingSubjects = ["JavaScript", "Python", "Web Development", "Algorithms", "Data Structures"];
+    const languageSubjects = ["Spanish", "French", "English Literature", "Grammar", "Conversation"];
+    
+    // Create and assign math subjects
+    for (const subjectName of mathSubjects) {
+      const subject = await this.createSubject({ categoryId: 1, name: subjectName, description: `Learn ${subjectName} with expert tutors` });
+      if (["Calculus", "Statistics", "Algebra"].includes(subjectName)) {
+        await this.assignSubjectToEducator({ educatorId: 1, subjectId: subject.id });
+      }
+    }
+    
+    // Create and assign programming subjects
+    for (const subjectName of programmingSubjects) {
+      const subject = await this.createSubject({ categoryId: 2, name: subjectName, description: `Master ${subjectName} with practical projects` });
+      if (["JavaScript", "Python", "Web Development"].includes(subjectName)) {
+        await this.assignSubjectToEducator({ educatorId: 2, subjectId: subject.id });
+      }
+    }
+    
+    // Create and assign language subjects
+    for (const subjectName of languageSubjects) {
+      const subject = await this.createSubject({ categoryId: 3, name: subjectName, description: `Become fluent in ${subjectName}` });
+      if (["Spanish", "French", "English Literature"].includes(subjectName)) {
+        await this.assignSubjectToEducator({ educatorId: 3, subjectId: subject.id });
+      }
     }
     
     // Create testimonials
@@ -164,33 +197,7 @@ export class MemStorage implements IStorage {
     ];
     
     for (const testimonial of testimonials) {
-      this.createTestimonial(testimonial);
-    }
-    
-    // Create subjects and link to educators
-    const mathSubjects = ["Calculus", "Statistics", "Algebra", "Geometry", "Trigonometry"];
-    const programmingSubjects = ["JavaScript", "Python", "Web Development", "Algorithms", "Data Structures"];
-    const languageSubjects = ["Spanish", "French", "English Literature", "Grammar", "Conversation"];
-    
-    for (const subjectName of mathSubjects) {
-      const subject = this.createSubject({ categoryId: 1, name: subjectName, description: `Learn ${subjectName} with expert tutors` });
-      if (["Calculus", "Statistics", "Algebra"].includes(subjectName)) {
-        this.assignSubjectToEducator({ educatorId: 1, subjectId: subject.id });
-      }
-    }
-    
-    for (const subjectName of programmingSubjects) {
-      const subject = this.createSubject({ categoryId: 2, name: subjectName, description: `Master ${subjectName} with practical projects` });
-      if (["JavaScript", "Python", "Web Development"].includes(subjectName)) {
-        this.assignSubjectToEducator({ educatorId: 2, subjectId: subject.id });
-      }
-    }
-    
-    for (const subjectName of languageSubjects) {
-      const subject = this.createSubject({ categoryId: 3, name: subjectName, description: `Become fluent in ${subjectName}` });
-      if (["Spanish", "French", "English Literature"].includes(subjectName)) {
-        this.assignSubjectToEducator({ educatorId: 3, subjectId: subject.id });
-      }
+      await this.createTestimonial(testimonial);
     }
     
     // Create some reviews
@@ -201,7 +208,7 @@ export class MemStorage implements IStorage {
     ];
     
     for (const review of reviews) {
-      this.createReview(review);
+      await this.createReview(review);
     }
   }
   
@@ -237,6 +244,20 @@ export class MemStorage implements IStorage {
   async createEducatorProfile(profileData: InsertEducatorProfile): Promise<EducatorProfile> {
     const id = this.educatorProfileId++;
     const profile: EducatorProfile = { ...profileData, id };
+    this.educatorProfiles.set(id, profile);
+    return profile;
+  }
+  
+  async updateEducatorProfile(id: number, profileData: EducatorProfile): Promise<EducatorProfile> {
+    if (!this.educatorProfiles.has(id)) {
+      throw new Error(`Educator profile not found: ${id}`);
+    }
+    
+    const profile: EducatorProfile = {
+      ...profileData,
+      id // ensure id is preserved
+    };
+    
     this.educatorProfiles.set(id, profile);
     return profile;
   }
@@ -335,10 +356,33 @@ export class MemStorage implements IStorage {
   
   // EducatorSubject operations
   async assignSubjectToEducator(data: InsertEducatorSubject): Promise<EducatorSubject> {
+    // Check if this educator-subject relationship already exists
+    const existingRelationship = Array.from(this.educatorSubjects.values()).find(
+      es => es.educatorId === data.educatorId && es.subjectId === data.subjectId
+    );
+    
+    if (existingRelationship) {
+      return existingRelationship; // Return existing relationship if it already exists
+    }
+    
+    // If not, create a new one
     const id = this.educatorSubjectId++;
     const educatorSubject: EducatorSubject = { ...data, id };
     this.educatorSubjects.set(id, educatorSubject);
     return educatorSubject;
+  }
+  
+  async removeSubjectFromEducator(educatorId: number, subjectId: number): Promise<boolean> {
+    const toRemove = Array.from(this.educatorSubjects.values()).find(
+      es => es.educatorId === educatorId && es.subjectId === subjectId
+    );
+    
+    if (toRemove) {
+      this.educatorSubjects.delete(toRemove.id);
+      return true;
+    }
+    
+    return false; // Nothing to remove
   }
   
   async getEducatorSubjects(educatorId: number): Promise<(Subject & { category: Category })[]> {

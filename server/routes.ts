@@ -142,6 +142,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Educator subjects management endpoint
+  app.post("/api/educator-subjects", requireAuth, async (req, res) => {
+    try {
+      if (!req.session.user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      // Ensure user is authorized to update educator subjects
+      const user = await storage.getUser(req.session.user.id);
+      if (!user || user.userType !== "educator") {
+        return res.status(403).json({ message: "Only educators can manage their subjects" });
+      }
+      
+      // Get the educator profile
+      const profile = await storage.getEducatorProfileByUserId(user.id);
+      if (!profile) {
+        return res.status(404).json({ message: "Educator profile not found" });
+      }
+      
+      const { subjectIds } = req.body;
+      
+      if (!Array.isArray(subjectIds)) {
+        return res.status(400).json({ message: "subjectIds must be an array" });
+      }
+      
+      console.log(`Updating subjects for educator ${profile.id}:`, subjectIds);
+      
+      // In a real production app, we would do this in a transaction
+      
+      // Get current subjects for this educator
+      const currentSubjects = await storage.getEducatorSubjects(profile.id);
+      const currentSubjectIds = currentSubjects.map(subject => subject.id);
+      
+      console.log("Current subject IDs:", currentSubjectIds);
+      console.log("New subject IDs:", subjectIds);
+      
+      // Find subjects to add (in subjectIds but not in currentSubjectIds)
+      const subjectsToAdd = subjectIds.filter(id => !currentSubjectIds.includes(id));
+      
+      // Find subjects to remove (in currentSubjectIds but not in subjectIds)
+      const subjectsToRemove = currentSubjectIds.filter(id => !subjectIds.includes(id));
+      
+      console.log("Subjects to add:", subjectsToAdd);
+      console.log("Subjects to remove:", subjectsToRemove);
+      
+      // Add new subjects
+      const addResults = await Promise.all(
+        subjectsToAdd.map(async (subjectId) => {
+          // Verify subject exists
+          const subject = await storage.getSubject(subjectId);
+          if (!subject) {
+            return { success: false, subjectId, error: "Subject not found" };
+          }
+          
+          try {
+            await storage.assignSubjectToEducator({
+              educatorId: profile.id,
+              subjectId
+            });
+            return { success: true, subjectId, action: "added" };
+          } catch (error) {
+            return { success: false, subjectId, error: "Failed to assign subject" };
+          }
+        })
+      );
+      
+      // Remove subjects no longer selected
+      const removeResults = await Promise.all(
+        subjectsToRemove.map(async (subjectId) => {
+          try {
+            const removed = await storage.removeSubjectFromEducator(profile.id, subjectId);
+            return { success: removed, subjectId, action: "removed" };
+          } catch (error) {
+            return { success: false, subjectId, error: "Failed to remove subject" };
+          }
+        })
+      );
+      
+      // Refresh the subjects for the educator
+      const updatedSubjects = await storage.getEducatorSubjects(profile.id);
+      
+      res.status(200).json({
+        message: "Subjects updated successfully",
+        subjects: updatedSubjects,
+        results: {
+          added: addResults,
+          removed: removeResults
+        },
+        shouldInvalidateProfile: true
+      });
+      
+    } catch (error) {
+      console.error("Error updating educator subjects:", error);
+      res.status(500).json({ message: "An error occurred updating educator subjects" });
+    }
+  });
+
   app.get("/api/educator-profiles", async (req, res) => {
     try {
       const { limit, subjectId, categoryId } = req.query;
@@ -208,6 +305,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Educator profiles API error:', error);
       res.status(500).json({ message: "An error occurred fetching educators" });
+    }
+  });
+
+  // Get educator profile by user ID (More specific route must go BEFORE generic route)
+  app.get("/api/educator-profiles/byUser/:userId", requireAuth, async (req, res) => {
+    try {
+      const userId = Number(req.params.userId);
+      const profile = await storage.getEducatorProfileByUserId(userId);
+      
+      if (!profile) {
+        return res.status(404).json({ message: "Educator profile not found" });
+      }
+      
+      const user = await storage.getUser(profile.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const subjects = await storage.getEducatorSubjects(profile.id);
+      console.log(`Educator ${profile.id} subjects:`, subjects);
+      
+      const reviews = await storage.getReviewsByEducator(profile.id);
+      
+      // Calculate average rating
+      let averageRating = 0;
+      if (reviews.length > 0) {
+        averageRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
+      }
+      
+      // Remove password from user object
+      const { password, ...userWithoutPassword } = user;
+      
+      res.json({
+        ...profile,
+        user: userWithoutPassword,
+        subjects,
+        reviews,
+        reviewCount: reviews.length,
+        averageRating
+      });
+    } catch (error) {
+      console.error("Error fetching educator profile:", error);
+      res.status(500).json({ message: "An error occurred fetching the educator profile" });
+    }
+  });
+
+  // Update educator profile
+  app.patch("/api/educator-profiles/:id", requireAuth, async (req, res) => {
+    try {
+      if (!req.session.user) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+      
+      const profileId = Number(req.params.id);
+      console.log(`Updating profile ${profileId}, received data:`, req.body);
+      
+      const profile = await storage.getEducatorProfile(profileId);
+      
+      if (!profile) {
+        return res.status(404).json({ message: "Educator profile not found" });
+      }
+      
+      // Ensure the current user can edit this profile
+      const user = await storage.getUser(req.session.user.id);
+      if (!user || user.userType !== "educator" || profile.userId !== user.id) {
+        return res.status(403).json({ message: "Not authorized to update this profile" });
+      }
+      
+      // Validate and parse the update data
+      const updateData = {
+        ...profile,
+        ...req.body,
+        id: profileId, // Ensure ID cannot be changed
+        userId: profile.userId, // Ensure userId cannot be changed
+      };
+      
+      // Make sure specialties is an array
+      if (!Array.isArray(updateData.specialties)) {
+        updateData.specialties = profile.specialties || [];
+      }
+
+      // Make sure availability is preserved if not provided
+      if (!updateData.availability) {
+        updateData.availability = profile.availability;
+      }
+
+      console.log("Parsed update data:", updateData);
+      
+      // Update the profile
+      const updatedProfile = await storage.updateEducatorProfile(profileId, updateData);
+      
+      res.json(updatedProfile);
+    } catch (error) {
+      console.error("Error updating educator profile:", error);
+      res.status(500).json({ message: "An error occurred updating the educator profile" });
     }
   });
 

@@ -17,6 +17,8 @@ export interface EducatorProfile {
   hourlyRate: number;
   experience?: string;
   education?: string;
+  teachingMethod?: string;
+  videoIntroduction?: string;
   specialties: string[];
   availability: Record<string, string[]>;
   user: User;
