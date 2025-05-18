@@ -110,3 +110,145 @@ export interface ReviewFormData {
   rating: number;
   comment?: string;
 }
+
+export interface Comment {
+  id: number;
+  content: string;
+  author: {
+    id: number;
+    name: string;
+    avatar?: string;
+  };
+  createdAt: string;
+  likes: number;
+  isLiked?: boolean;
+}
+
+export interface BlogPost {
+  id: number;
+  title: string;
+  content: string;
+  excerpt: string;
+  author: {
+    id: number;
+    name: string;
+    avatar?: string;
+  };
+  coverImage?: string;
+  tags: string[];
+  category: string;
+  createdAt: string;
+  readTime: number;
+  likes: number;
+  comments: number;
+  isLiked?: boolean;
+  commentList?: Comment[];
+}
+
+export type EventType = 'webinar' | 'workshop';
+
+export interface Event {
+  id: number;
+  type: EventType;
+  title: string;
+  description: string;
+  host: {
+    id: number;
+    name: string;
+    avatar?: string;
+  };
+  coverImage?: string;
+  startDate: string;
+  endDate: string;
+  timezone: string;
+  capacity: number;
+  registeredCount: number;
+  price: number;
+  tags: string[];
+  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  requirements?: string[];
+  learningOutcomes?: string[];
+  status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
+  likes: number;
+  comments: number;
+  isLiked?: boolean;
+  commentList?: Comment[];
+}
+
+export interface EventRegistration {
+  id: number;
+  eventId: number;
+  userId: number;
+  registeredAt: string;
+  status: 'confirmed' | 'waitlist' | 'cancelled';
+  paymentStatus: 'pending' | 'completed' | 'refunded';
+}
+
+export interface Challenge {
+  id: number;
+  title: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  type: 'weekly' | 'monthly' | 'special';
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  category: string;
+  points: number;
+  tasks: ChallengeTask[];
+  participants: number;
+  status: 'upcoming' | 'active' | 'completed';
+}
+
+export interface ChallengeTask {
+  id: number;
+  title: string;
+  description: string;
+  points: number;
+  completed?: boolean;
+}
+
+export interface UserChallenge {
+  userId: number;
+  challengeId: number;
+  progress: number;
+  completedTasks: number[];
+  pointsEarned: number;
+  startedAt: string;
+  completedAt?: string;
+  rank?: number;
+}
+
+export interface LeaderboardEntry {
+  user: {
+    id: number;
+    name: string;
+    avatar?: string;
+    badges: Badge[];
+  };
+  points: number;
+  rank: number;
+  challengesCompleted: number;
+  streak: number;
+}
+
+export interface Badge {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  unlockedAt?: string;
+}
+
+export interface Reward {
+  id: number;
+  type: 'badge' | 'discount' | 'souvenir';
+  title: string;
+  description: string;
+  value: string | number; // percentage for discount, image URL for badge/souvenir
+  requirements: {
+    minRank?: number;
+    minPoints?: number;
+    challengesCompleted?: number;
+  };
+}

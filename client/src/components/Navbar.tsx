@@ -10,8 +10,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { apiRequest } from "@/lib/queryClient";
+import { ChevronDown } from "lucide-react";
 
 const Navbar = () => {
   const [location] = useLocation();
@@ -34,6 +36,12 @@ const Navbar = () => {
       console.error("Error signing out:", error);
     }
   };
+
+  const isForumActive = location.startsWith("/forum");
+  const isBlogActive = location.startsWith("/blog");
+  const isEventsActive = location.startsWith("/events");
+  const isChallengeActive = location.startsWith("/challenges");
+  const isCommunityMenuActive = isForumActive || isBlogActive || isEventsActive || isChallengeActive;
   
   return (
     <header className="bg-white shadow-sm">
@@ -61,127 +69,157 @@ const Navbar = () => {
                   Subjects
                 </span>
               </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className={`inline-flex items-center px-1 pt-1 border-b-2 ${isCommunityMenuActive ? "border-primary text-gray-900" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"} text-sm font-medium`}>
+                    Community
+                    <ChevronDown className="ml-1 h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <Link href="/forum">
+                    <DropdownMenuItem className="cursor-pointer">
+                      Forum
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href="/blog-events">
+                    <DropdownMenuItem className="cursor-pointer">
+                      Blog & Events
+                    </DropdownMenuItem>
+                  </Link>
+                  <DropdownMenuSeparator />
+                  <Link href="/challenges">
+                    <DropdownMenuItem className="cursor-pointer">
+                      Learning Challenges
+                    </DropdownMenuItem>
+                  </Link>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </nav>
           </div>
           
-          <div className="flex items-center">
-            {!isLoading && (
-              <div className="hidden md:flex md:items-center md:space-x-2">
-                {currentUser ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                        <Avatar className="h-8 w-8">
-                          {currentUser.profileImage ? (
-                            <AvatarImage src={currentUser.profileImage} alt={currentUser.firstName} />
-                          ) : (
-                            <AvatarFallback>{currentUser.firstName.charAt(0) + currentUser.lastName.charAt(0)}</AvatarFallback>
-                          )}
-                        </Avatar>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <Link href="/dashboard">
-                          <span>Dashboard</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleSignOut}>
-                        Sign out
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <div className="flex space-x-2">
-                    <Link href="/signin">
-                      <Button variant="outline">Sign in</Button>
-                    </Link>
-                    <Link href="/signup">
-                      <Button>Sign up</Button>
-                    </Link>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            <div className="flex md:hidden ml-4">
-              <button
-                type="button"
-                className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              >
-                <span className="sr-only">Open main menu</span>
-                {mobileMenuOpen ? (
-                  <CloseIcon className="h-6 w-6" />
-                ) : (
-                  <MenuIcon className="h-6 w-6" />
-                )}
-              </button>
+          {!isLoading && (
+            <div className="hidden md:flex md:items-center md:space-x-2">
+              {currentUser ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Avatar className="h-8 w-8">
+                        {currentUser.profileImage ? (
+                          <AvatarImage src={currentUser.profileImage} alt={currentUser.firstName} />
+                        ) : (
+                          <AvatarFallback>{currentUser.firstName.charAt(0) + currentUser.lastName.charAt(0)}</AvatarFallback>
+                        )}
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem>
+                      <Link href="/dashboard">
+                        <span>Dashboard</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleSignOut}>
+                      Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <div className="flex space-x-2">
+                  <Link href="/signin">
+                    <Button variant="outline">Sign in</Button>
+                  </Link>
+                  <Link href="/signup">
+                    <Button>Sign up</Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+          
+          <div className="flex items-center md:hidden">
+            <button
+              type="button"
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              <span className="sr-only">Open main menu</span>
+              {mobileMenuOpen ? (
+                <CloseIcon className="h-6 w-6" />
+              ) : (
+                <MenuIcon className="h-6 w-6" />
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div className={`md:hidden ${mobileMenuOpen ? "block" : "hidden"}`}>
+        <div className="pt-2 pb-3 space-y-1">
+          <Link href="/">
+            <span className={`block pl-3 pr-4 py-2 border-l-4 ${location === "/" ? "border-primary text-primary bg-primary-50" : "border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"} text-base font-medium`}>
+              Home
+            </span>
+          </Link>
+          <Link href="/find-educators">
+            <span className={`block pl-3 pr-4 py-2 border-l-4 ${location === "/find-educators" ? "border-primary text-primary bg-primary-50" : "border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"} text-base font-medium`}>
+              Find Educators
+            </span>
+          </Link>
+          <Link href="/categories">
+            <span className={`block pl-3 pr-4 py-2 border-l-4 ${location.startsWith("/categories") ? "border-primary text-primary bg-primary-50" : "border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"} text-base font-medium`}>
+              Subjects
+            </span>
+          </Link>
+          <div className="border-l-4 border-transparent">
+            <div className="pl-3 pr-4 py-2 text-base font-medium text-gray-500">
+              Community
+            </div>
+            <div className="pl-6 space-y-1">
+              <Link href="/forum">
+                <span className={`block py-2 text-sm ${isForumActive ? "text-primary" : "text-gray-500 hover:text-gray-700"}`}>
+                  Forum
+                </span>
+              </Link>
+              <Link href="/blog-events">
+                <span className={`block py-2 text-sm ${isBlogActive || isEventsActive ? "text-primary" : "text-gray-500 hover:text-gray-700"}`}>
+                  Blog & Events
+                </span>
+              </Link>
+              <Link href="/challenges">
+                <span className={`block py-2 text-sm ${isChallengeActive ? "text-primary" : "text-gray-500 hover:text-gray-700"}`}>
+                  Learning Challenges
+                </span>
+              </Link>
             </div>
           </div>
         </div>
         
-        <div className={`md:hidden ${mobileMenuOpen ? "block" : "hidden"}`}>
-          <div className="pt-2 pb-3 space-y-1">
-            <Link href="/">
-              <span className={`block pl-3 pr-4 py-2 border-l-4 ${location === "/" ? "border-primary text-primary bg-primary-50" : "border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"} text-base font-medium`}>
-                Home
-              </span>
-            </Link>
-            <Link href="/find-educators">
-              <span className={`block pl-3 pr-4 py-2 border-l-4 ${location === "/find-educators" ? "border-primary text-primary bg-primary-50" : "border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"} text-base font-medium`}>
-                Find Educators
-              </span>
-            </Link>
-            <Link href="/categories">
-              <span className={`block pl-3 pr-4 py-2 border-l-4 ${location.startsWith("/categories") ? "border-primary text-primary bg-primary-50" : "border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700"} text-base font-medium`}>
-                Subjects
-              </span>
-            </Link>
-          </div>
-          
-          <div className="pt-4 pb-3 border-t border-gray-200">
-            {!isLoading && (
-              <>
-                <div className="flex items-center px-4 space-x-2">
-                  {currentUser ? (
-                    <>
-                      <div className="flex-shrink-0">
-                        <Avatar className="h-8 w-8">
-                          {currentUser.profileImage ? (
-                            <AvatarImage src={currentUser.profileImage} alt={currentUser.firstName} />
-                          ) : (
-                            <AvatarFallback>{currentUser.firstName.charAt(0) + currentUser.lastName.charAt(0)}</AvatarFallback>
-                          )}
-                        </Avatar>
-                      </div>
-                      <div className="ml-3 flex flex-col">
-                        <div className="text-base font-medium text-gray-800">
-                          {currentUser.firstName} {currentUser.lastName}
-                        </div>
-                        <div className="text-sm font-medium text-gray-500">
-                          {currentUser.email}
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="flex flex-col space-y-2 w-full">
-                      <Link href="/signin">
-                        <Button variant="outline" className="w-full">
-                          Sign in
-                        </Button>
-                      </Link>
-                      <Link href="/signup">
-                        <Button className="w-full">
-                          Sign up
-                        </Button>
-                      </Link>
+        {!isLoading && (
+          <>
+            <div className="pt-4 pb-3 border-t border-gray-200">
+              {currentUser ? (
+                <>
+                  <div className="flex items-center px-4">
+                    <div className="flex-shrink-0">
+                      <Avatar className="h-8 w-8">
+                        {currentUser.profileImage ? (
+                          <AvatarImage src={currentUser.profileImage} alt={currentUser.firstName} />
+                        ) : (
+                          <AvatarFallback>{currentUser.firstName.charAt(0) + currentUser.lastName.charAt(0)}</AvatarFallback>
+                        )}
+                      </Avatar>
                     </div>
-                  )}
-                </div>
-                
-                {currentUser && (
-                  <div className="mt-3 space-y-1 px-2">
+                    <div className="ml-3">
+                      <div className="text-base font-medium text-gray-800">
+                        {currentUser.firstName} {currentUser.lastName}
+                      </div>
+                      <div className="text-sm font-medium text-gray-500">
+                        {currentUser.email}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-3 space-y-1">
                     <Link href="/dashboard">
                       <Button variant="ghost" className="w-full justify-start">
                         Dashboard
@@ -191,11 +229,24 @@ const Navbar = () => {
                       Sign out
                     </Button>
                   </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
+                </>
+              ) : (
+                <div className="mt-3 space-y-1 px-2">
+                  <Link href="/signin">
+                    <Button variant="outline" className="w-full">
+                      Sign in
+                    </Button>
+                  </Link>
+                  <Link href="/signup">
+                    <Button className="w-full">
+                      Sign up
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </header>
   );
