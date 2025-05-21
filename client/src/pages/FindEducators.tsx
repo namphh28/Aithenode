@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EducatorProfile, Category } from "@/lib/types";
 import { SearchIcon, StarIcon } from "@/lib/icons";
-import { sampleEducators, sampleCategories } from "@/lib/sampleData";
 
 // Available languages
 const LANGUAGES = [
@@ -61,21 +60,11 @@ const FindEducators = () => {
   // Fetch all educators (with fallback to sample data)
   const { data: educators, isLoading: educatorsLoading } = useQuery<EducatorProfile[]>({
     queryKey: ["/api/educator-profiles"],
-    queryFn: async () => {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return sampleEducators;
-    }
   });
   
   // Fetch all categories (with fallback to sample data)
   const { data: categories } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
-    queryFn: async () => {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return sampleCategories;
-    }
   });
   
   // Apply filters when data or filter values change

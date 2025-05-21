@@ -116,7 +116,7 @@ const EducatorProfile = () => {
     );
   }
   
-  const { user, title, hourlyRate, experience, education, specialties, availability, subjects = [], reviews = [], averageRating = 0, reviewCount = 0 } = educator;
+  const { user, title, hourlyRate, experience, education, specialties, availability, subjects = [], reviews = [], averageRating = 0, reviewCount = 0, teachingMethod, videoIntroduction } = educator;
   
   return (
     <div className="flex flex-col min-h-screen">
@@ -190,7 +190,7 @@ const EducatorProfile = () => {
                         
                         {experience && (
                           <div>
-                            <h3 className="text-lg font-semibold mb-2">Experience</h3>
+                            <h3 className="text-lg font-semibold mb-2">Experience & Skills</h3>
                             <p className="text-gray-700">{experience}</p>
                           </div>
                         )}
@@ -199,6 +199,27 @@ const EducatorProfile = () => {
                           <div>
                             <h3 className="text-lg font-semibold mb-2">Education</h3>
                             <p className="text-gray-700">{education}</p>
+                          </div>
+                        )}
+                        
+                        {teachingMethod && (
+                          <div>
+                            <h3 className="text-lg font-semibold mb-2">Teaching Method</h3>
+                            <p className="text-gray-700">{teachingMethod}</p>
+                          </div>
+                        )}
+                        
+                        {videoIntroduction && (
+                          <div>
+                            <h3 className="text-lg font-semibold mb-2">Video Introduction</h3>
+                            <div className="aspect-video">
+                              <iframe 
+                                src={videoIntroduction.replace('watch?v=', 'embed/')}
+                                className="w-full h-full rounded-md"
+                                title="Video Introduction"
+                                allowFullScreen
+                              ></iframe>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -215,12 +236,13 @@ const EducatorProfile = () => {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      {subjects.length > 0 ? (
+                      {subjects && subjects.length > 0 ? (
                         <div className="space-y-6">
                           {/* Group subjects by category */}
-                          {Array.from(new Set(subjects.map(subject => subject.category.id))).map(categoryId => {
-                            const categorySubjects = subjects.filter(subject => subject.category.id === categoryId);
-                            const categoryName = categorySubjects[0].category.name;
+                          {Array.from(new Set(subjects.map(subject => subject.category?.id))).map(categoryId => {
+                            if (!categoryId) return null;
+                            const categorySubjects = subjects.filter(subject => subject.category?.id === categoryId);
+                            const categoryName = categorySubjects[0]?.category?.name || "Other";
                             
                             return (
                               <div key={categoryId}>
